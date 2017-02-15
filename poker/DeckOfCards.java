@@ -12,10 +12,9 @@ import java.util.Random;
 //the discard pile (these cards cannot be dealt until the deck is reshuffled). The 
 //integers 'next' and 'amountDiscarded' keep track of the positions of the next card
 //to deal and the next empty space in the discard pile array. The dealNext and returnCard
-//methods allow cards to be dealt and discarded. When the deck is initialized, it is
-//not shuffled (but this can be done by using the shuffle method). The reset method
-//automatically shuffles a reconstructed deck for a new game. Also contains a toString
-//method and a main method for testing. When creating cards it is assumed that ace is high.
+//methods allow cards to be dealt and discarded. The reset method automatically shuffles a 
+//reconstructed deck for a new game. Also contains a toString method and a main method for
+//testing. When creating cards it is assumed that ace is high.
 public class DeckOfCards {
 
 	private PlayingCard[] cards;
@@ -23,14 +22,15 @@ public class DeckOfCards {
 	private PlayingCard[] discards;
 	private int amountDiscarded;
 	
-	//Public constructor: creates the deck and initializes the integer indexes. Does *not*
-	//shuffle the deck.
+	//Public constructor: creates the deck and initializes the integer indexes. Shuffles deck.
 	public DeckOfCards(){
 		//52 PlayingCard instances
 		initializeDeck(true);
 		//Initialize next card position and amount of discarded cards
 		next = 51;
 		amountDiscarded = 0;
+		//Shuffle deck for new game
+		shuffle();
 	}
 	
 	//Creates 52 instances of PlayingCard and puts them into the cards array
