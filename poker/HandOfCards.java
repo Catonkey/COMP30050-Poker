@@ -225,132 +225,181 @@ public class HandOfCards {
 		}
 	}
 	
+	
+	//Returns integer value representing score of a high hand
+	public int getValueHighHand(){
+		//Add default hand value
+		int val = HIGH_HAND_DEFAULT;
+		for(int i=0; i<HAND_SIZE; i++){
+			//Increase hand value by card value to the power of hand size (5) - card position
+			val += Math.pow(cards[i].getGameValue(), HAND_SIZE-i);
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a one pair hand
+	//Pair value is to the highest power, followed by the highest to lowest single cards.
+	//The pair values are multiplied by a scalar (175) to avoid situations where a high
+	//single card is ranked higher than a low pair.
+	public int getValueOnePair(){
+		int val = ONE_PAIR_DEFAULT;
+		int singleCount = 0;
+		for(int i=0; i<HAND_SIZE; i++){
+			//If card is part of pair; otherwise single card
+			if((i<HAND_SIZE-1) && cards[i].getGameValue()==cards[i+1].getGameValue()){
+				//Increase hand value by pair (value ^ 4) * 175
+				val += Math.pow(cards[i].getGameValue(), HAND_SIZE-1) * 175;
+				//Skip second card in pair
+				i++;
+			} else {
+				//Increase hand value by the card value to a lower power (3, 2 or 1) 
+				val += Math.pow(cards[i].getGameValue(), (HAND_SIZE-2)-singleCount);
+				//Increase variable to decrease power for next single card
+				singleCount += 1;
+			}
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a two pair hand
+	//Highest pair value is to the highest power, followed by the lower pair and single card.
+	//The pair values are multiplied by a scalar (2) to avoid situations where a high
+	//single card is ranked higher than a low pair.
+	public int getValueTwoPair(){
+		int val = TWO_PAIR_DEFAULT;
+		int pairCount = 0;
+		for(int i=0; i<HAND_SIZE; i++){
+			//If card is part of pair; otherwise single card
+			if((i<HAND_SIZE-1) && cards[i].getGameValue()==cards[i+1].getGameValue()){
+				//Increase hand value by 2*(pair value to the power of 3 or 2 (first is higher))
+				val += Math.pow(cards[i].getGameValue(), (HAND_SIZE-2)-pairCount) * 2;
+				//Increase variable to decrease power for second pair
+				pairCount += 1;
+				//Skip second card in pair
+				i++;
+			} else {
+				//Increase hand value by the card value (single card)
+				val += cards[i].getGameValue();
+			}
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a three of a kind hand
+	//The set (3 cards) is to the highest power, followed by the highest to lowest single cards.
+	//The set value is multiplied by a scalar (25) to avoid situations where a high
+	//single card is ranked higher than a low set.
+	public int getValueThreeOfAKind(){
+		int val = THREE_OF_A_KIND_DEFAULT;
+		int singleCount = 0;
+		for(int i=0; i<HAND_SIZE; i++){
+			//If card is part of three of a kind; otherwise single card
+			if((i<HAND_SIZE-2) && cards[i].getGameValue()==cards[i+2].getGameValue()){
+				//Increase hand value by pair (value ^ 3) * 25
+				val += Math.pow(cards[i].getGameValue(), HAND_SIZE-2) * 25;
+				//Skip next two cards
+				i = i+2;
+			} else {
+				//Increase hand value by the card value to a lower power (2 or 1) 
+				val += Math.pow(cards[i].getGameValue(), (HAND_SIZE-3)-singleCount);
+				//Increase variable to decrease power for next single card
+				singleCount += 1;
+			}
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a straight hand
+	//The value of the first (highest) card in the straight influences the hand value,
+	//unless it's a low ace straight (always a value of 5 + STRAIGHT_DEFAULT)
+	public int getValueStraight(){
+		int val = 0;
+		//If low ace straight, increase game value by 5, otherwise increase by first card's value
+		if(cards[0].getFaceValue()==1 && cards[HAND_SIZE-1].getFaceValue()==2){
+			val += STRAIGHT_DEFAULT + 5;
+		} else {
+			val += STRAIGHT_DEFAULT + cards[0].getGameValue();
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a full house hand
+	//The set (3 cards) is to the highest power, followed by the pair.
+	//The set value is multiplied by a scalar (4) to avoid situations where a high pair value is
+	//ranked more than a low set.
+	public int getValueFullHouse(){
+		int val = FULL_HOUSE_DEFAULT;
+		//If card is part of three of a kind; otherwise pair
+		if(cards[0].getGameValue()==cards[2].getGameValue()){
+			//Increase hand value by three of a kind card (value ^ 2) * 4
+			val += Math.pow(cards[0].getGameValue(), 2) * 4;
+			//Add pair value
+			val += cards[HAND_SIZE-1].getGameValue();
+		} else {
+			//Increase hand value by the pair card value
+			val += cards[0].getGameValue();
+			//Add three of a kind (value ^ 2) * 4
+			val += Math.pow(cards[HAND_SIZE-1].getGameValue(), 2) * 4;
+		}
+		return val;
+	}
+	
+	//Returns integer value representing score of a four of a kind hand
+	//The set (4 cards) is to the highest power, followed by the single card.
+	//The set value is multiplied by a scalar (4) to avoid situations where a high
+	//single card is ranked higher than a low set.
+	public int getValueFourOfAKind(){
+		int val = FOUR_OF_A_KIND_DEFAULT;
+		//If card is part of four of a kind; otherwise single card
+		if(cards[0].getGameValue()==cards[3].getGameValue()){
+			//Increase hand value by (four of a kind card value ^ 2) * 4
+			val += Math.pow(cards[0].getGameValue(), 2) * 4;
+			//Add pair value
+			val += cards[HAND_SIZE-1].getGameValue();
+		} else {
+			//Increase hand value by the pair card value
+			val += cards[0].getGameValue();
+			//Add (four of a kind value ^ 2) * 4
+			val += Math.pow(cards[HAND_SIZE-1].getGameValue(), 2) * 4;
+		}
+		return val;
+	}
+	
+	
 	//Returns an integer value representing the value of the hand when compared with
 	//other hand values. Higher is better. Better hand types are valued more, and cards are
 	//valued according to rules of poker (single cards will not affect the value of a hand more
-	//than a pair, etc.
-	//Generally values groups (pairs/three of a kind) more by getting their card value to a 
-	//power - For example - in a high hand, the hand value is given by the highest card value
-	//to the power of 5 + the next highest card value to the power of 4.. etc.
-	//Since the hand is ordered, this will always yield ordered results. In hand with groups,
-	//the same approach is taken *HOWEVER* since the groups that are valued highest may NOT be
-	//of higher value than the 'kicker' cards, it is necessary to multiply some of these results
-	//by a scalar: for example, in a two pair hand, if the second pair is a pair of 3's,
-	//3^2 = 9 with a 2 kicker (9+2 = 11), a hand with a second pair of 2's (2^2 = 4) with an 
-	//ace kick (4+14 = 18) yields a higher score. Multiplying the pair value avoids this problem.
+	//than a pair, etc. Uses helper functions for specific hand types to calculate values, by 
+	//putting valuable groups/pairs of cards to high powers, with less valuable groups and single
+	//cards to lower powers. Scalar multiplication is also applied to ensure that the lowest value
+	//of each group type is greater than the highest value of smaller groups.
 	public int getGameValue(){
 		for(int i=0; i<HAND_SIZE; i++){
 			if(cards[i]==null) return 0;
 		}
 		int gameVal = 0;
 		if(isHighHand()){//HIGH HAND
-			//Add default hand value
-			gameVal += HIGH_HAND_DEFAULT;
-			for(int i=0; i<HAND_SIZE; i++){
-				//Increase hand value by card value to the power of hand size (5) - card position
-				gameVal += Math.pow(cards[i].getGameValue(), HAND_SIZE-i);
-			}
+			gameVal = getValueHighHand();
 		} else if(isOnePair()){//ONE PAIR
-			gameVal += ONE_PAIR_DEFAULT;
-			int singleCount = 0;
-			for(int i=0; i<HAND_SIZE; i++){
-				//If card is part of pair; otherwise single card
-				if((i<HAND_SIZE-1) && cards[i].getGameValue()==cards[i+1].getGameValue()){
-					//Increase hand value by pair (value ^ 4) * 175
-					gameVal += Math.pow(cards[i].getGameValue(), HAND_SIZE-1) * 175;
-					//Skip second card in pair
-					i++;
-				} else {
-					//Increase hand value by the card value to a lower power (3, 2 or 1) 
-					gameVal += Math.pow(cards[i].getGameValue(), (HAND_SIZE-2)-singleCount);
-					//Increase variable to decrease power for next single card
-					singleCount += 1;
-				}
-			}
+			gameVal = getValueOnePair();
 		} else if(isTwoPair()){//TWO PAIR
-			gameVal += TWO_PAIR_DEFAULT;
-			int pairCount = 0;
-			for(int i=0; i<HAND_SIZE; i++){
-				//If card is part of pair; otherwise single card
-				if((i<HAND_SIZE-1) && cards[i].getGameValue()==cards[i+1].getGameValue()){
-					//Increase hand value by 2*(pair value to the power of 3 or 2 (first is higher))
-					gameVal += Math.pow(cards[i].getGameValue(), (HAND_SIZE-2)-pairCount) * 2;
-					//Increase variable to decrease power for second pair
-					pairCount += 1;
-					//Skip second card in pair
-					i++;
-				} else {
-					//Increase hand value by the card value (single card)
-					gameVal += cards[i].getGameValue();
-				}
-			}
+			gameVal = getValueTwoPair();
 		} else if(isThreeOfAKind()){//THREE OF A KIND
-			gameVal += THREE_OF_A_KIND_DEFAULT;
-			int singleCount = 0;
-			for(int i=0; i<HAND_SIZE; i++){
-				//If card is part of three of a kind; otherwise single card
-				if((i<HAND_SIZE-2) && cards[i].getGameValue()==cards[i+2].getGameValue()){
-					//Increase hand value by pair (value ^ 3) * 25
-					gameVal += Math.pow(cards[i].getGameValue(), HAND_SIZE-2) * 25;
-					//Skip next two cards
-					i = i+2;
-				} else {
-					//Increase hand value by the card value to a lower power (2 or 1) 
-					gameVal += Math.pow(cards[i].getGameValue(), (HAND_SIZE-3)-singleCount);
-					//Increase variable to decrease power for next single card
-					singleCount += 1;
-				}
-			}
+			gameVal = getValueThreeOfAKind();
 		} else if(isStraight()){//STRAIGHT
-			//If low ace straight, increase game value by 5, otherwise increase by first card's value
-			if(cards[0].getFaceValue()==1 && cards[HAND_SIZE-1].getFaceValue()==2){
-				gameVal += STRAIGHT_DEFAULT + 5;
-			} else {
-				gameVal += STRAIGHT_DEFAULT + cards[0].getGameValue();
-			}
-		} else if(isFlush()){
-			//Add flush score and high hand score
-			gameVal += FLUSH_DEFAULT;
-			for(int i=0; i<HAND_SIZE; i++){
-				gameVal += Math.pow(cards[i].getGameValue(), HAND_SIZE-i);
-			}
+			gameVal = getValueStraight();
+		} else if(isFlush()){//FLUSH
+			//Add flush score and high hand score (subtract high_hand_default if non-zero)
+			gameVal = FLUSH_DEFAULT + getValueHighHand() - HIGH_HAND_DEFAULT;
 		} else if(isFullHouse()){//FULL HOUSE
-			gameVal += FULL_HOUSE_DEFAULT;
-			//If card is part of three of a kind; otherwise pair
-			if(cards[0].getGameValue()==cards[2].getGameValue()){
-				//Increase hand value by three of a kind card (value ^ 2) * 10
-				gameVal += Math.pow(cards[0].getGameValue(), 2) * 10;
-				//Add pair value
-				gameVal += cards[HAND_SIZE-1].getGameValue();
-			} else {
-				//Increase hand value by the pair card value
-				gameVal += cards[0].getGameValue();
-				//Add three of a kind (value ^ 2) * 10
-				gameVal += Math.pow(cards[HAND_SIZE-1].getGameValue(), 2) * 10;
-			}
+			gameVal = getValueFullHouse();
 		} else if(isFourOfAKind()){//FOUR OF A KIND
-			gameVal += FOUR_OF_A_KIND_DEFAULT;
-			//If card is part of four of a kind; otherwise single card
-			if(cards[0].getGameValue()==cards[2].getGameValue()){
-				//Increase hand value by (four of a kind card value ^ 2) * 4
-				gameVal += Math.pow(cards[0].getGameValue(), 2) * 4;
-				//Add pair value
-				gameVal += cards[HAND_SIZE-1].getGameValue();
-			} else {
-				//Increase hand value by the pair card value
-				gameVal += cards[0].getGameValue();
-				//Add (four of a kind value ^ 2) * 4
-				gameVal += Math.pow(cards[HAND_SIZE-1].getGameValue(), 2) * 4;
-			}
+			gameVal = getValueFourOfAKind();
 		} else if(isStraightFlush()){//STRAIGHT FLUSH
-			//If low ace straight, increase game value by 5, otherwise increase by first card's value
-			if(cards[0].getFaceValue()==1 && cards[HAND_SIZE-1].getFaceValue()==2){
-				gameVal += STRAIGHT_FLUSH_DEFAULT + 5;
-			} else {
-				gameVal += STRAIGHT_FLUSH_DEFAULT + cards[0].getGameValue();
-			}
+			//Add straight flush score and straight value (subtracting straight_default)
+			gameVal = STRAIGHT_FLUSH_DEFAULT + getValueStraight() - STRAIGHT_DEFAULT;
 		} else if(isRoyalFlush()){//ROYAL FLUSH
-			gameVal += ROYAL_FLUSH_DEFAULT;
+			gameVal = ROYAL_FLUSH_DEFAULT;
 		}
 		return gameVal;
 	}
