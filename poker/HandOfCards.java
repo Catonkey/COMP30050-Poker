@@ -225,6 +225,97 @@ public class HandOfCards {
 		}
 	}
 	
+	//Determine whether the hand is a busted straight (1 card needed to make a straight)
+	public boolean isBustedStraight(){
+		//Return false for any hand other than high hand, one pair or flush. - All other hands either
+		//contain a straight already, or would require more than 1 card to make a straight
+		if(isHighHand() || isOnePair() || isFlush()){
+			//Get lowest card
+			int min = cards[HAND_SIZE-1].getFaceValue();
+			int prev = min;
+			//Amount of 'straight' cards - 1 (including initial lowest card)
+			int straightCards = 1;
+			//For all other cards, if card is less than lowest card + 5, increase straightCards
+			//Check for cards of same value (do not include pairs as 2 cards)
+			for(int i=HAND_SIZE-2; i>=0; i--){
+				if(cards[i].getFaceValue()!=prev && cards[i].getFaceValue() < min+5){
+					straightCards ++;
+					prev = cards[i].getFaceValue();
+				}
+			}
+			//Check if ace can be low
+			if(cards[0].getFaceValue()==1 && min ==2) straightCards++;
+			//Return true if 4 of 5 cards are straight cards
+			if(straightCards == 4) return true;
+			
+			//Repeat, but with second lowest card.
+			min = cards[HAND_SIZE-2].getFaceValue();
+			prev = min;
+			straightCards = 1;
+			//For all higher cards, if card is less than second lowest card +5, increase straightCards 
+			//Check for cards of same value (do not include pairs as 2 cards)
+			for(int i=HAND_SIZE-3; i>=0; i--){
+				if(cards[i].getFaceValue()!=prev && cards[i].getFaceValue() < min+5){
+					straightCards ++;
+					prev = cards[i].getFaceValue();
+				}
+			}
+			//*No need to check ace a second time.
+			//Return true if 4 of 5 cards are straight cards, otherwise return false.
+			if(straightCards == 4){
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	
+	//Determine whether the hand is a busted flush (1 card needed to make a flush)
+	public boolean isBustedFlush(){
+		//Return false for any hand other than high hand, one pair or flush. - All other hands either
+		//contain a straight already, or would require more than 1 card to make a straight
+		if(isHighHand() || isOnePair() || isFlush()){
+			//Get suit of first card
+			char suitOne = cards[0].getSuit();
+			char suitTwo = '\0';
+			//Counters for cards of each suit
+			int suitOneAmount = 1;
+			int suitTwoAmount = 0;
+			
+			//For each card, if card suit is suit one or suit two, increase appropriate counter
+			//If card suit does not equal suit one, and suit two counter is zero, assign this suit
+			//to suit two, and increase counter. If a third suit is discovered, return false.
+			for(int i=1; i<HAND_SIZE; i++){
+				char cardSuit = cards[i].getSuit();
+				//Card suit is the same as suit one
+				if(cardSuit==suitOne){
+					suitOneAmount += 1;
+				//Card suit is the same as suit two
+				} else if(suitTwoAmount != 0 && cardSuit==suitTwo){
+					suitTwoAmount += 1;
+				//Card suit is not the same as suit one, and is the second suit discovered
+				} else if(suitTwoAmount == 0){
+					suitTwo = cardSuit;
+					suitTwoAmount += 1;
+				//Card suit is neither suit one nor suit two - return false
+				} else {
+					return false;
+				}
+			}
+			//If there are exactly 4 cards of suit one or two, return true, otherwise return false
+			if(suitOneAmount == 4 || suitTwoAmount == 4){
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
 	
 	//Returns integer value representing score of a high hand
 	public int getValueHighHand(){
@@ -364,7 +455,6 @@ public class HandOfCards {
 		}
 		return val;
 	}
-	
 	
 	//Returns an integer value representing the value of the hand when compared with
 	//other hand values. Higher is better. Better hand types are valued more, and cards are
@@ -567,5 +657,17 @@ public class HandOfCards {
 		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output);
 		output = handC.setHand(aceH, kingH, queenH, jackH, tenH);
 		System.out.println("C: " + handC + "  \t" + handC.getGameValue() + "\t" + output);
+		
+		//Testing busted straight:
+		output = handA.setHand(aceC, twoC, threeC, fourC, fiveS);
+		System.out.println("\nA: " + handA + "  \t" + handA.getGameValue() + "\tBusted Straight:" + handA.isBustedStraight());
+		output = handB.setHand(aceC, kingH, queenH, jackH, sixC);
+		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\tBusted Straight:"  + handB.isBustedStraight());
+		
+		//Testing busted flush:
+				output = handA.setHand(aceD, twoC, threeC, fourS, sixC);
+				System.out.println("\nA: " + handA + "  \t" + handA.getGameValue() + "\tBusted Flush:" + handA.isBustedFlush());
+				output = handB.setHand(aceH, kingH, queenH, jackH, sixC);
+				System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\tBusted Flush:"  + handB.isBustedFlush());
 	}
 }
