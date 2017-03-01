@@ -17,6 +17,8 @@ import java.util.Random;
 //testing. When creating cards it is assumed that ace is high.
 public class DeckOfCards {
 
+	static private final int DECK_SIZE = 5;
+	
 	private PlayingCard[] cards;
 	private int next;
 	private PlayingCard[] discards;
