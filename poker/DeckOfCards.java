@@ -17,7 +17,7 @@ import java.util.Random;
 //testing. When creating cards it is assumed that ace is high.
 public class DeckOfCards {
 
-	static private final int DECK_SIZE = 5;
+	static private final int DECK_SIZE = 52;
 	
 	private PlayingCard[] cards;
 	private int next;
@@ -38,8 +38,8 @@ public class DeckOfCards {
 	//Creates 52 instances of PlayingCard and puts them into the cards array
 	private void initializeDeck(Boolean aceHigh){
 		//Array of playing cards
-		cards = new PlayingCard[52];
-		discards = new PlayingCard[52];
+		cards = new PlayingCard[DECK_SIZE];
+		discards = new PlayingCard[DECK_SIZE];
 		//First loop iterates through the 4 suits
 		for(int i=0; i<4; i++){
 			//Determine the character that will represent the suit
@@ -82,7 +82,7 @@ public class DeckOfCards {
 	
 	//Reconstructs the deck, and initializes the next, amountDiscarded variables, and shuffles
 	//the deck.
-	public void reset(){
+	public synchronized void reset(){
 		//52 PlayingCard instances
 		initializeDeck(true);
 		//Initialize next card position and amount of discarded cards
@@ -95,7 +95,7 @@ public class DeckOfCards {
 	//Adds all cards in the discard pile back into the main deck, and then shuffles the deck.
 	//Note: the discarded cards are placed on the top of the deck, but this does not matter
 	//as the deck is immediately shuffled. The deck is shuffled by swapping cards.
-	public void shuffle(){
+	public synchronized void shuffle(){
 		//Put cards from discard pile back into deck (doesn't matter where due to shuffle after)
 		int index = 0;
 		while(discards[index]!=null){
@@ -128,9 +128,11 @@ public class DeckOfCards {
 	
 	//Deals the next playing card based on the index indicated by the 'next' variable.
 	//After the card is dealt, it's replaced by null in the array, and 'next' is updated.
-	public PlayingCard dealNext(){
-		//Return null if next card index is < zero (no cards left in deck)
-		if(next<0) return null;
+	public synchronized PlayingCard dealNext(){
+		//Shuffle discards into deck if no more cards in playable deck
+		if(next<0){
+			shuffle();
+		}
 		//Get card to be dealt
 		PlayingCard card = cards[next];
 		//Set this card to null in deck array
@@ -142,7 +144,7 @@ public class DeckOfCards {
 	
 	//Adds a card into the discard pile array, at the index indicated by 'amountDiscarded',
 	//before updating this variable.
-	public void returnCard(PlayingCard discarded){
+	public synchronized void returnCard(PlayingCard discarded){
 		//Add discarded card to discards array, at index = total number of discards
 		discards[amountDiscarded] = discarded;
 		//Increase amount of discards

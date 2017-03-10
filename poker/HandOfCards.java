@@ -17,7 +17,7 @@ package poker;
 //based on poker rules (value of pair considered before value of single cards etc.)
 public class HandOfCards {
 	
-	static private final int HAND_SIZE = 5;
+	static public final int HAND_SIZE = 5;
 	static private final int DECK_SIZE = 52;
 	static private final int CARD_TYPES = 13;
 	//Hand type values - Added to hand game value based on the hand type.
@@ -49,12 +49,12 @@ public class HandOfCards {
 	}
 
 	//Returns the deck for discarding cards to.
-	private DeckOfCards getDeck(){
+	public DeckOfCards getDeck(){
 		return deck;
 	}
 	
 	//Sorts a hand - orders a hand by the GAME value (ranks aces highest in poker)
-	private void sort(){
+	public void sort(){
 		//For each card position
 		for(int i=0; i<HAND_SIZE; i++){
 			int j = i+1;
@@ -255,9 +255,9 @@ public class HandOfCards {
 			prev = min;
 			straightCards = 1;
 			//For all higher cards, if card is less than second lowest card +5, increase straightCards 
-			//Check for cards of same value (do not include pairs as 2 cards)
+			//Check for cards of same value (do not include pairs as 2 cards) *Use game value for high ace
 			for(int i=HAND_SIZE-3; i>=0; i--){
-				if(cards[i].getFaceValue()!=prev && cards[i].getFaceValue() < min+5){
+				if(cards[i].getFaceValue()!=prev && cards[i].getGameValue() < min+5){
 					straightCards ++;
 					prev = cards[i].getFaceValue();
 				}
@@ -638,7 +638,7 @@ public class HandOfCards {
 	
 	
 	//Return the discard probability for a card in a one pair hand
-	public int getDiscardProbOnePair(int cardPos){
+	private int getDiscardProbOnePair(int cardPos){
 		boolean potentialFlush = isBustedFlush();
 		boolean potentialStraight = isBustedStraight();
 		int cardGameVal = cards[cardPos].getGameValue();
@@ -673,7 +673,7 @@ public class HandOfCards {
 	}
 	
 	//Return the discard probability for a card in a two pair hand
-	public int getDiscardProbTwoPair(int cardPos){
+	private int getDiscardProbTwoPair(int cardPos){
 		int cardGameVal = cards[cardPos].getGameValue();
 		//Prioritize discarding any card that is not in the pair
 		if(cardPos+1 < HAND_SIZE && cards[cardPos+1].getGameValue() == cardGameVal){
@@ -693,7 +693,7 @@ public class HandOfCards {
 	}
 	
 	//Return the discard probability for a card in a three of a kind hand
-	public int getDiscardProbThreeOfAKind(int cardPos){
+	private int getDiscardProbThreeOfAKind(int cardPos){
 		int cardGameVal = cards[cardPos].getGameValue();
 		//Keep all cards in the set
 		if(cardPos+2 < HAND_SIZE && cards[cardPos+2].getGameValue() == cardGameVal){
@@ -712,7 +712,7 @@ public class HandOfCards {
 	}
 	
 	//Return the discard probability for a card in a straight (0 unless flush can be made)
-	public int getDiscardProbStraight(int cardPos){
+	private int getDiscardProbStraight(int cardPos){
 		if(isBustedFlush() && cardPos == getBustedFlushCard()){
 			//Return probability of making the flush (about 20%)
 			double p = (CARD_TYPES-4)/(DECK_SIZE-5);
@@ -723,7 +723,7 @@ public class HandOfCards {
 	}
 	
 	//Return the discard probability for a card in a flush
-	public int getDiscardProbFlush(int cardPos){
+	private int getDiscardProbFlush(int cardPos){
 		if(isBustedStraight() && cardPos == getBustedStraightCard()){
 			//Return probability of making a straight flush (very low)
 			double p = 1/(DECK_SIZE-5);
@@ -734,7 +734,7 @@ public class HandOfCards {
 	}
 	
 	//Return the discard probability for a card in a four of a kind hand
-	public int getDiscardProbFourOfAKind(int cardPos){
+	private int getDiscardProbFourOfAKind(int cardPos){
 		int cardGameVal = cards[cardPos].getGameValue();
 		//Keep all cards in the four of a kind
 		if(cardPos+1 < HAND_SIZE && cards[cardPos+1].getGameValue() == cardGameVal){
@@ -836,6 +836,14 @@ public class HandOfCards {
 		return str;
 	}
 	
+	//Discards a card at a card position, and draws a new card to that position.
+	public void discard(int cardPosition){
+		//Discard card
+		deck.returnCard(cards[cardPosition]);
+		//Replace card
+		cards[cardPosition] = deck.dealNext();
+	}
+	
 	//main method for testing
 	//**Uses the setHand method for creating specific hands for testing purposes only.
 	//Discerns hand types, compares different hand values and prints the results.
@@ -888,6 +896,8 @@ public class HandOfCards {
 		output = handA.setHand(fourS, jackH, queenH, threeC, fourC);
 		System.out.println("\nA: " + handA + "  \t" + handA.getGameValue() + "\t" + output);
 		output = handB.setHand(aceS, jackH, queenH, aceH, fourC);
+		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output);
+		output = handB.setHand(aceS, jackH, queenH, aceH, tenH);
 		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output);
 		
 		//Comparing two pair:
@@ -948,17 +958,5 @@ public class HandOfCards {
 		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output);
 		output = handC.setHand(aceH, kingH, queenH, jackH, tenH);
 		System.out.println("C: " + handC + "  \t" + handC.getGameValue() + "\t" + output);
-		
-		//Testing busted straight:
-		output = handA.setHand(threeC, queenH, fiveC, fourC, fiveS);
-		System.out.println("\nA: " + handA + "  \t" + handA.getGameValue() + "\t" + output + "\t\tBusted Straight:" + handA.isBustedStraight());
-		output = handB.setHand(aceC, kingH, queenH, jackH, sixC);
-		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output + "\t\tBusted Straight:"  + handB.isBustedStraight());
-		
-		//Testing busted flush:
-		output = handA.setHand(aceD, twoC, threeC, fourS, sixC);
-		System.out.println("\nA: " + handA + "  \t" + handA.getGameValue() + "\t" + output + "\t\tBusted Flush:" + handA.isBustedFlush());
-		output = handB.setHand(aceH, kingH, queenH, jackH, sixC);
-		System.out.println("B: " + handB + "  \t" + handB.getGameValue() + "\t" + output + "\t\tBusted Flush:"  + handB.isBustedFlush());
 	}
 }
